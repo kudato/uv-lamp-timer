@@ -67,7 +67,7 @@ void Display::showTimeScreen(const uint32_t &time,
     // show header
     _driver->setCursor(0,20);
     _driver->setTextSize(2);
-    _driver->println("Time:");
+    _driver->println("Timer:");
     // show value
     uint16_t minutes;
     uint8_t seconds;
