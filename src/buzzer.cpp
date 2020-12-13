@@ -1,18 +1,20 @@
 #pragma once
 #include "buzzer.h"
-#include <stdint.h>
-#include <Arduino.h>
 
+//--------------------------------------------------------------------
+// Sounds
+//--------------------------------------------------------------------
 
 static void Buzzer::end(void)
 {
-    for (int i=400; i<6000; i=i*1.5)
+    for (int i=400; i<4000; i=i*1.5)
     {
         tone(BUZZER_PIN, i);
-        delay(20);
+        delay(60);
     }
     noTone(BUZZER_PIN);
 }
+
 
 static void Buzzer::click(void)
 {
@@ -24,7 +26,8 @@ static void Buzzer::click(void)
     noTone(BUZZER_PIN);
 }
 
-static void Buzzer::alarm(void)
+
+static void Buzzer::alarm(void) // when overheating
 {
     for (int j=0; j <3; j++)
     {
