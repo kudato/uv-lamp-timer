@@ -1,26 +1,32 @@
 #pragma once
 #include "display.h"
 
+//--------------------------------------------------------------------
+// Init display
+//--------------------------------------------------------------------
 
 Display::Display(Adafruit_SSD1306 *driver)
 {
     _driver = driver;
 }
 
+
 void Display::begin(void)
 {
-    _driver->begin(SSD1306_SWITCHCAPVCC, 0x3C);
-    _clear();
+    _driver->begin(SSD1306_SWITCHCAPVCC, 0x3C); _clear();
     _driver->drawBitmap(32, 0, logoImg, 64, 64, 1);
-    _display();
     _driver->setFont(&GFX_FONT);
+    _display(); delay(1400);
 }
 
+//--------------------------------------------------------------------
+// Showing
+//--------------------------------------------------------------------
 
 void Display::showChoiceScreen(const uint8_t &level)
 {
-    uint8_t pixelYCursor = 10;
     _clear();
+    uint8_t pixelYCursor = 13;
     for (uint8_t i = 0; i < QUANTITY_OF_CONFIGS; i++)
     {
         _driver->setCursor(1,pixelYCursor);
@@ -41,6 +47,7 @@ void Display::showChoiceScreen(const uint8_t &level)
     _display();
 }
 
+
 void Display::showPowerScreen(const uint8_t &power)
 {
     _clear();
@@ -59,32 +66,41 @@ void Display::showPowerScreen(const uint8_t &power)
     _display();
 }
 
+
 void Display::showTimeScreen(const uint32_t &time,
     const uint8_t &cursor)
 {
     _clear();
     _driver->setTextColor(WHITE);
+
     // show header
     _driver->setCursor(0,20);
     _driver->setTextSize(2);
     _driver->println("Timer:");
-    // show value
-    uint16_t minutes;
-    uint8_t seconds;
+
+    // prepare values
+    uint16_t minutes; uint8_t seconds;
     _calculateTime(time, minutes, seconds);
+
+    // show values
     _driver->setTextSize(2);
     _driver->setCursor(10,48);
+
+    // show minutes
     if (_numsCounter(minutes) == 1)
     {
         _driver->print(0, DEC);
     }
     _driver->print(minutes, DEC);
     _driver->print(":");
+
+    // show seconds
     if (_numsCounter(seconds) == 1)
     {
         _driver->print(0, DEC);
     }
     _driver->println(seconds, DEC);
+
     // show cursor
     switch (cursor)
     {
@@ -95,6 +111,7 @@ void Display::showTimeScreen(const uint32_t &time,
         _driver->drawRect(56, 26, 43, 25, WHITE);
         break;
     }
+
     // show footer
     _driver->setCursor(20,64);
     _driver->setTextSize(1);
@@ -109,7 +126,8 @@ void Display::showSummaryScreen(const ConfigSet &config,
 {
     _clear();
     _driver->setTextColor(WHITE);
-    // show light
+
+    // show light power
     _driver->drawBitmap(0, 5, lightImg, 16, 16, WHITE);
     _driver->setCursor(24,21);
     _driver->setTextSize(2);
@@ -126,24 +144,31 @@ void Display::showSummaryScreen(const ConfigSet &config,
     _driver->drawBitmap(0, 47, timerImg, 16, 16, WHITE);
     _driver->setCursor(19,63);
     _driver->setTextSize(2);
-    uint16_t minutes;
-    uint8_t seconds;
+
+    // prepare values
+    uint16_t minutes; uint8_t seconds;
     _calculateTime(config.duration, minutes, seconds);
+
+    // show minutes
     if (_numsCounter(minutes) == 1)
     {
         _driver->print(0, DEC);
     }
     _driver->print(minutes, DEC);
     _driver->print(":");
+
+    // show seconds
     if (_numsCounter(seconds) == 1)
     {
         _driver->print(0, DEC);
     }
     _driver->print(seconds, DEC);
+
     // show menu
     _driver->drawBitmap(108, 3, playImg, 16, 16, WHITE);
     _driver->drawBitmap(108, 25, editImg, 16, 16, WHITE);
     _driver->drawBitmap(108, 48, exitImg, 16, 16, WHITE);
+
     // show cursor
     switch (cursor)
     {
@@ -159,20 +184,24 @@ void Display::showSummaryScreen(const ConfigSet &config,
         _driver->drawRect(106, 45, 22, 19, WHITE);
         break;
     }
+
     // show buffer
     _display();
 }
+
 
 void Display::showRunningScreen(const uint32_t &time,
     const uint8_t &cursor, const bool &pause, const bool &hot)
 {
     _clear();
     _driver->setTextColor(WHITE);
-    // show time
-    uint16_t minutes;
-    uint8_t seconds;
+
+    // prepare values
+    uint16_t minutes; uint8_t seconds;
     _calculateTime(time, minutes, seconds);
-    _driver->setCursor(3,33);
+
+    // show minutes
+    _driver->setCursor(3,31);
     _driver->setTextSize(3);
     if (_numsCounter(minutes) == 1)
     {
@@ -180,31 +209,34 @@ void Display::showRunningScreen(const uint32_t &time,
     }
     _driver->print(minutes, DEC);
     _driver->print(":");
+
+    // show seconds
     if (_numsCounter(seconds) == 1)
     {
         _driver->print(0, DEC);
     }
     _driver->print(seconds, DEC);
-    // show pause btn
+
+    // show menu
     if (pause)
     {
-        if (hot)
+        if (hot) // if overheating, change the play icon to fire
         {
-            _driver->drawBitmap(56, 44, fireImg, 16, 16, WHITE);
-            _driver->drawRoundRect(6, 40, 116, 23, 4, WHITE);
+            _driver->drawBitmap(27, 44, fireImg, 16, 16, WHITE);
         }
         else
         {
             _driver->drawBitmap(27, 44, playImg, 16, 16, WHITE);
-            _driver->drawBitmap(87, 44, exitImg, 16, 16, WHITE);
-            if (cursor)
-            {
-                _driver->drawRoundRect(67, 40, 55, 23, 4, WHITE);
-            }
-            else
-            {
-                _driver->drawRoundRect(6, 40, 55, 23, 4, WHITE);
-            }
+        }
+        _driver->drawBitmap(87, 44, exitImg, 16, 16, WHITE);
+
+        if (cursor == 1)
+        {
+            _driver->drawRoundRect(67, 40, 55, 23, 4, WHITE);
+        }
+        else
+        {
+            _driver->drawRoundRect(6, 40, 55, 23, 4, WHITE);
         }
     }
     else
@@ -222,42 +254,53 @@ void Display::showDoneScreen(void)
 {
     _clear();
     _driver->setTextColor(WHITE);
+
     // show text
     _driver->setCursor(5,30);
     _driver->setTextSize(3);
     _driver->print("Done!");
+
     // show ok
     _driver->setCursor(48,60);
     _driver->setTextSize(2);
     _driver->print("Ok");
     _driver->drawRoundRect(6, 38, 110, 25, 4, WHITE);
+
     // show buffer
     _display();
 }
 
 
+void Display::clearScreen(void)
+{
+    _clear();
+    _display();
+}
 
-
-
+//--------------------------------------------------------------------
 // Draw utilities
+//--------------------------------------------------------------------
 
 void Display::_clear(void)
 {
     _driver->clearDisplay();
 }
 
+
 void Display::_display(void)
 {
     _driver->display();
 }
+
 
 void Display::_drawArrow(void)
 {
     _driver->drawBitmap(110, 28, arrowImg, 16, 16, WHITE);
 }
 
-
+//--------------------------------------------------------------------
 // Others utilities
+//--------------------------------------------------------------------
 
 void Display::_calculateTime(const uint32_t &time,
     uint16_t &minutes, uint8_t &seconds)

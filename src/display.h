@@ -1,19 +1,23 @@
 #pragma once
+#include "../uv-lamp-timer.h"
 
-#include <stdint.h>
-#include <SPI.h>
-#include <Wire.h>
+// Presets
+#include "settings.h"
+
+// Adafruit graphic libraries
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#include "font.h"
+// Font and bitmap
 #include "bitmaps.h"
-#include "settings.h"
+#include "font.h"
 
+// Set common font
 #define GFX_FONT DialogInput_plain_12
-#define MSECONDS_IN_MIN 60000
-#define MSECONDS_IN_SEC 1000
 
+//--------------------------------------------------------------------
+// Class for showing all screens
+//--------------------------------------------------------------------
 
 class Display
 {
@@ -33,6 +37,8 @@ class Display
 
         void showDoneScreen(void);
 
+        void clearScreen(void);
+
     private:
         Adafruit_SSD1306 *_driver;
         void _clear(void);
@@ -42,4 +48,3 @@ class Display
         void _calculateTime(const uint32_t &time,
             uint16_t &minutes, uint8_t &seconds);
 };
-
