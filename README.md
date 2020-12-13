@@ -1,6 +1,6 @@
 ## UV Lamp Timer
 
-One of my hobbies is making PCB with [photolithography](https://en.wikipedia.org/wiki/Photolithography);
+One of my hobbies is making PCB with [photolithography](https://en.wikipedia.org/wiki/Photolithography).
 To have an accurate exposure time and be calm during long exposures of the soldering mask, I designed and made this device.
 
 ![Device start](hardware/device-start.gif "Device start")
