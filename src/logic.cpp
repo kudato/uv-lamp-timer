@@ -383,6 +383,7 @@ void Logic::doneScreen(void)
     {
         MENU_LEVEL = SUMMARY_SCREEN;
         END_ALARM_COUNTER = 0;
+        return;
     }
 
     // End alarm
