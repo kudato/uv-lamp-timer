@@ -9,7 +9,7 @@
 #define UV_LAMP_PWM_PIN 6
 #define UV_LAMP_MAX_BRIGHTNESS 100 // pwm max value in 0-255
 
-// Coolong fan
+// Cooling fan
 #define FAN_PIN 5
 #define FAN_SPEED 255 // static fan speed
 
@@ -65,11 +65,3 @@ extern uint8_t MENU_LEVEL;
 
 // Flag for launch screen saver
 extern volatile bool SCREEN_SAVER_STOP;
-
-
-
-
-
-
-
-
