@@ -1,8 +1,9 @@
 #pragma once
-#include <stdint.h>
+#include "../uv-lamp-timer.h"
 
-#define MAX_BRIGHTNESS 100
-#define LED_PWM_PIN 6
+//--------------------------------------------------------------------
+// Class for control UV lamp
+//--------------------------------------------------------------------
 
 class UVLamp
 {

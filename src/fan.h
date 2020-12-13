@@ -1,10 +1,9 @@
 #pragma once
-#include <stdint.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include "../uv-lamp-timer.h"
 
-#define FAN_PIN 5
-#define FAN_SPEED 255
+//--------------------------------------------------------------------
+// Class for control cooling fan
+//--------------------------------------------------------------------
 
 class Fan {
     public:

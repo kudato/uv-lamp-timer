@@ -1,5 +1,9 @@
-// Created by http://oleddisplay.squix.ch/ Consider a donation
-// In case of problems make sure that you are using the font file with the correct version!
+#pragma once
+
+//--------------------------------------------------------------------
+// Font for using with Adafruit GFX library
+//--------------------------------------------------------------------
+
 const uint8_t DialogInput_plain_12Bitmaps[] PROGMEM = {
 
 	// Bitmap Data:
@@ -98,6 +102,8 @@ const uint8_t DialogInput_plain_12Bitmaps[] PROGMEM = {
 	0xAA,0xAA,0xAA, // '|'
 	0xE0,0x82,0x08,0x20,0x62,0x08,0x20,0x8E,0x00 // '}'
 };
+
+
 const GFXglyph DialogInput_plain_12Glyphs[] PROGMEM = {
 // bitmapOffset, width, height, xAdvance, xOffset, yOffset
 	  {     0,   1,   1,   8,    0,    0 }, // ' '
@@ -195,5 +201,12 @@ const GFXglyph DialogInput_plain_12Glyphs[] PROGMEM = {
 	  {   619,   2,  12,   8,    3,  -10 }, // '|'
 	  {   622,   6,  11,   8,    1,  -10 } // '}'
 };
+
+
 const GFXfont DialogInput_plain_12 PROGMEM = {
-(uint8_t  *)DialogInput_plain_12Bitmaps,(GFXglyph *)DialogInput_plain_12Glyphs,0x20, 0x7E, 15};
+	(uint8_t  *)DialogInput_plain_12Bitmaps,
+	(GFXglyph *)DialogInput_plain_12Glyphs,
+	0x20,
+	0x7E,
+	15
+};

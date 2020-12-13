@@ -1,18 +1,19 @@
 #pragma once
 #include "light.h"
-#include <stdint.h>
-#include <Arduino.h>
 
+//--------------------------------------------------------------------
+// Class for control UV lamp
+//--------------------------------------------------------------------
 
 UVLamp::UVLamp(void)
 {
-    pinMode(LED_PWM_PIN,OUTPUT);
+    pinMode(UV_LAMP_PWM_PIN,OUTPUT);
 }
 
 
 void UVLamp::setBrightness(uint8_t value)
 {
-    if (value <= MAX_BRIGHTNESS)
+    if (value <= UV_LAMP_MAX_BRIGHTNESS)
     {
         _brightness = value;
     }
@@ -21,10 +22,11 @@ void UVLamp::setBrightness(uint8_t value)
 
 void UVLamp::start(void)
 {
-    analogWrite(LED_PWM_PIN, _brightness);
+    analogWrite(UV_LAMP_PWM_PIN, _brightness);
 }
+
 
 void UVLamp::stop(void)
 {
-    analogWrite(LED_PWM_PIN, 0);
+    analogWrite(UV_LAMP_PWM_PIN, 0);
 }
