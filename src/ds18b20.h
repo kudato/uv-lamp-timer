@@ -1,15 +1,13 @@
 #pragma once
-#include <stdint.h>
+#include "../uv-lamp-timer.h"
+
+// Libraries for DS18B20
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-#define MAX_TEMP 55.0
-#define TEMP_THRESHOLD 35.0
-#define TEMP_HYSTERESIS 32.0
-#define TEMP_SENSOR_PIN A3
-#define TEMP_PRECISION 12
-#define TEMP_CONVERSION_TIME 750
-
+//--------------------------------------------------------------------
+// Class for getting temperature from sensor DS18B20
+//--------------------------------------------------------------------
 
 class TempSensor
 {
@@ -18,8 +16,8 @@ class TempSensor
         bool highTemp(void);
         bool needFan(void);
     private:
-        float _getTemp(void);
         OneWire *_bus;
+        float _getTemp(void);
         bool _overTemp;
         bool _overThreshold;
         float _temperature;

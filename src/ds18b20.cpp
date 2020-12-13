@@ -1,8 +1,9 @@
 #pragma once
-#include <stdint.h>
-#include <Arduino.h>
 #include "ds18b20.h"
 
+//--------------------------------------------------------------------
+// Class for getting temperature from sensor DS18B20
+//--------------------------------------------------------------------
 
 TempSensor::TempSensor(OneWire *bus)
 {
@@ -15,36 +16,37 @@ TempSensor::TempSensor(OneWire *bus)
     _overTemp = false;
 }
 
-float TempSensor::_getTemp(void)
+
+bool TempSensor::needFan(void)
 {
-    if (digitalRead(TEMP_SENSOR_PIN) == 1)
+    if (_overThreshold)
     {
-        uint8_t data[2];
-        _bus->reset();
-        _bus->write(0xCC);
-        _bus->write(0xBE);
-        data[0] = _bus->read(); data[1] = _bus->read();
-        _temperature = ((data[1] << 8) + data[0]) / 16.0;
+        if (_getTemp() >= TEMP_FAN_HYSTERESIS)
+        {
+            return true;
+        }
     }
-    if (millis() - _prevConversionTime >= TEMP_CONVERSION_TIME)
+    else
     {
-        _bus->reset();
-        _bus->write(0xCC);
-        _bus->write(0x44);
-        _prevConversionTime = millis();
+        if (_getTemp() >= TEMP_FAN_THRESHOLD)
+        {
+            _overThreshold = true;
+            return true;
+        }
     }
-    Serial.println(_temperature);
-    return _temperature;
+    _overThreshold = false;
+    return false;
 }
+
 
 bool TempSensor::highTemp(void)
 {
-    if (_getTemp() >= MAX_TEMP)
+    if (_getTemp() >= TEMP_STOP_THRESHOLD)
     {
         _overTemp = true;
         return true;
     }
-    else if ((_getTemp() >= TEMP_THRESHOLD) && _overTemp)
+    else if ((_getTemp() >= TEMP_FAN_THRESHOLD) && _overTemp)
     {
         return true;
     }
@@ -53,23 +55,23 @@ bool TempSensor::highTemp(void)
 }
 
 
-bool TempSensor::needFan(void)
+float TempSensor::_getTemp(void)
 {
-    if (_overThreshold)
+    if (digitalRead(DS18B20_SENSOR_PIN) == 1)
     {
-        if (_getTemp() >= TEMP_HYSTERESIS)
-        {
-            return true;
-        }
+        uint8_t data[2];
+        _bus->reset();
+        _bus->write(0xCC);
+        _bus->write(0xBE);
+        data[0] = _bus->read(); data[1] = _bus->read();
+        _temperature = ((data[1] << 8) + data[0]) / 16.0;
     }
-    else
+    if (millis() - _prevConversionTime >= DS18B20_CONVERSION_TIME)
     {
-        if (_getTemp() >= TEMP_THRESHOLD)
-        {
-            _overThreshold = true;
-            return true;
-        }
+        _bus->reset();
+        _bus->write(0xCC);
+        _bus->write(0x44);
+        _prevConversionTime = millis();
     }
-    _overThreshold = false;
-    return false;
+    return _temperature;
 }
