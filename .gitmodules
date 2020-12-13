@@ -1,0 +1,12 @@
+[submodule "libs/OneWire"]
+	path = libs/OneWire
+	url = https://github.com/kudato/OneWire
+[submodule "libs/Adafruit_SSD1306"]
+	path = libs/Adafruit_SSD1306
+	url = https://github.com/kudato/Adafruit_SSD1306
+[submodule "libs/DallasTemperature"]
+	path = libs/DallasTemperature
+	url = https://github.com/kudato/Arduino-Temperature-Control-Library
+[submodule "libs/Adafruit-GFX"]
+	path = libs/Adafruit-GFX
+	url = https://github.com/kudato/Adafruit-GFX-Library
