@@ -1,7 +1,9 @@
 #pragma once
-#include <stdint.h>
-#include <Arduino.h>
-#include <EEPROM.h>
+#include "../uv-lamp-timer.h"
+
+//--------------------------------------------------------------------
+// Presets in EEPROM
+//--------------------------------------------------------------------
 
 #define CONFIG_SET_LENGTH 20
 #define QUANTITY_OF_CONFIGS 4
@@ -18,7 +20,7 @@ struct ConfigSet
 class Settings
 {
     public:
+        static void init(void); // Used for initial configuration load
         static ConfigSet get(const uint8_t &number);
         static void put(const uint8_t &number, const ConfigSet &config);
-        static void init(void);
 };

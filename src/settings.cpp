@@ -1,6 +1,9 @@
 #pragma once
 #include "settings.h"
 
+//--------------------------------------------------------------------
+// Presets in EEPROM
+//--------------------------------------------------------------------
 
 ConfigSet Settings::get(const uint8_t &number)
 {
@@ -22,6 +25,9 @@ void Settings::put(const uint8_t &number, const ConfigSet &config)
     );
 }
 
+//--------------------------------------------------------------------
+// First time init
+//--------------------------------------------------------------------
 
 void Settings::init(void)
 {
