@@ -12,9 +12,6 @@ volatile bool SCREEN_SAVER_STOP = false;
 static volatile uint8_t RING_BUFFER[RING_BUFFER_SIZE];
 static volatile uint8_t RING_BUFFER_IDX_IN = 0;
 
-// Additional prescaler for ADC conversion frequency
-static volatile uint8_t ADC_PERIOD_COUNTER = 0;
-
 // Average value calculated from buffer value
 static volatile uint8_t ADC_AVERAGE_VALUE = 0;
 
@@ -24,26 +21,23 @@ static volatile uint8_t ADC_AVERAGE_VALUE = 0;
 
 ISR (ADC_vect)
 {
-    if (ADC_PERIOD_COUNTER == 0) // ADC freq / 255
+    // Read value to ring buffer and apply mask to buffer input index
+    RING_BUFFER[RING_BUFFER_IDX_IN++] = ADCH;
+    RING_BUFFER_IDX_IN &= RING_BUFFER_MASK;
+    // When the buffer overflows, recalculate the average value
+    if (RING_BUFFER_IDX_IN == 0)
     {
-        // Read value to ring buffer and apply mask to buffer input index
-        RING_BUFFER[RING_BUFFER_IDX_IN++] = ADCH;
-        RING_BUFFER_IDX_IN &= RING_BUFFER_MASK;
-        // When the buffer overflows, recalculate the average value
-        if (RING_BUFFER_IDX_IN == 0)
+        uint16_t sum = 0;
+        for (uint8_t i = 0; i < RING_BUFFER_SIZE; i++)
         {
-            uint16_t sum = 0;
-            for (uint8_t i = 0; i < RING_BUFFER_SIZE; i++)
-            {
-                sum += RING_BUFFER[i];
-            }
-            ADC_AVERAGE_VALUE = sum / RING_BUFFER_SIZE;
+            sum += RING_BUFFER[i];
         }
-        // Check trashhold
-        if (((ADCH + 255) - ADC_AVERAGE_VALUE) > 355)
-        {
-            SCREEN_SAVER_STOP = true;
-        }
+        ADC_AVERAGE_VALUE = sum / RING_BUFFER_SIZE;
+    }
+    // Check trashhold
+    if (((ADCH + 255) - ADC_AVERAGE_VALUE) > 355)
+    {
+        SCREEN_SAVER_STOP = true;
     }
 }
 
