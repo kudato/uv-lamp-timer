@@ -64,7 +64,7 @@
 extern uint8_t MENU_LEVEL;
 
 // Flag for launch screen saver
-extern volatile bool SCREEN_SAVER_START;
+extern volatile bool SCREEN_SAVER_STOP;
 
 
 

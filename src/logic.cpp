@@ -4,53 +4,101 @@
 #include "ds18b20.h"
 #include "fan.h"
 #include "buzzer.h"
-#include <Arduino.h>
+#include "adc.h"
 
-uint8_t MENU_LEVEL = 0;
+//--------------------------------------------------------------------
+// Variables
+//--------------------------------------------------------------------
 
-static Adafruit_SSD1306 ddriver(128, 64, &Wire, -1);
-static Display display(&ddriver);
-
-static OneWire oneWire(TEMP_SENSOR_PIN);
-static TempSensor tempSensor(&oneWire);
-
-static UVLamp lamp;
-static Fan fan;
-
+// Menu variables
+uint8_t MENU_LEVEL = CHOISE_SCREEN;
 static uint8_t MENU_CURSOR = 0;
+
+// Configuration variables
 static uint8_t CONFIG_NUMBER = 0;
 static ConfigSet CHOISED_CONFIG;
 
+// Status variables
 static bool RUNNING = false;
 static bool RESUMING = false;
-static uint32_t REMAINING_TIME = 0;
-static uint32_t LAST_TIME_POINT = 0;
+static bool SCREEN_SAVER = false;
 static bool HIGH_TEMP = false;
 static bool PAUSE = false;
 
+// Timers variables
+static uint32_t REMAINING_TIME = 0;
+static uint32_t LAST_TIME_POINT = 0;
+static uint32_t LAST_IDLE_TIME_POINT = 0;
+
+// Done variables
+static uint32_t LAST_END_ALARM_TIME_POINT = 0;
+static uint8_t END_ALARM_COUNTER = 0;
+
+//--------------------------------------------------------------------
+// Periphery objects
+//--------------------------------------------------------------------
+
+// Display
+static Adafruit_SSD1306 ddriver(128, 64, &Wire, -1);
+static Display display(&ddriver);
+
+// DS18B20 temperature sensor
+static OneWire oneWire(DS18B20_SENSOR_PIN);
+static TempSensor tempSensor(&oneWire);
+
+// PWM lamp control
+static UVLamp lamp;
+
+// PWM fan control
+static Fan fan;
+
+//--------------------------------------------------------------------
+// Peripheral init
+//--------------------------------------------------------------------
 
 void Logic::begin(void)
 {
     display.begin();
     Button::begin();
+    adcBegin();
+    if (INITAL_CONFIGS_LOAD == 1)
+    {
+        Settings::init();
+    }
 }
 
+//--------------------------------------------------------------------
+// Logic for each of the menu levels
+//--------------------------------------------------------------------
 
 void Logic::choiseScreen(void)
 {
-    display.showChoiceScreen(CONFIG_NUMBER);
+    // Show
+    if (!SCREEN_SAVER)
+    {
+        display.showChoiceScreen(CONFIG_NUMBER);
+    }
+    else
+    {
+        return;
+    }
+
+    // Button handling
     switch (Button::pressed())
     {
     case OK_BUTTON:
+        // read from EEPROM
         CHOISED_CONFIG = Settings::get(CONFIG_NUMBER);
+
+        // Next screen depending on the selected preset
         switch (CONFIG_NUMBER)
         {
-        case 0:
+        case 0: // if "Custom" then start the setup
             MENU_LEVEL++;
             break;
 
-        default:
-            MENU_LEVEL = 3;
+        default: // else go to SUMMARY_SCREEN
+            MENU_LEVEL = SUMMARY_SCREEN;
             break;
         }
         break;
@@ -74,7 +122,17 @@ void Logic::choiseScreen(void)
 
 void Logic::powerScreen(void)
 {
-    display.showPowerScreen(CHOISED_CONFIG.power);
+    // Show
+    if (!SCREEN_SAVER)
+    {
+        display.showPowerScreen(CHOISED_CONFIG.power);
+    }
+    else
+    {
+        return;
+    }
+
+    // Button handling
     switch (Button::pressed())
     {
     case OK_BUTTON:
@@ -101,33 +159,45 @@ void Logic::powerScreen(void)
 
 void Logic::timeScreen(void)
 {
-    display.showTimeScreen(CHOISED_CONFIG.duration, MENU_CURSOR);
+    // Show
+    if (!SCREEN_SAVER)
+    {
+        display.showTimeScreen(CHOISED_CONFIG.duration, MENU_CURSOR);
+    }
+    else
+    {
+        return;
+    }
+
+    // Button handling
     switch (Button::pressed())
     {
     case OK_BUTTON:
-        if (MENU_CURSOR == 0)
+        switch (MENU_CURSOR)
         {
+        case 0:
             MENU_CURSOR = 1;
-        }
-        else
-        {
-            MENU_CURSOR = 0;
-            Settings::put(CONFIG_NUMBER, CHOISED_CONFIG);
+            break;
+
+        default:
             MENU_LEVEL++;
+            MENU_CURSOR = 0;
+            // write to EEPROM
+            Settings::put(CONFIG_NUMBER, CHOISED_CONFIG);
         }
         break;
 
     case UP_BUTTON:
-        if (MENU_CURSOR == 0)
+        if (MENU_CURSOR == 0) // minutes
         {
-            if (CHOISED_CONFIG.duration <= 5940000)
-            {
+            if (CHOISED_CONFIG.duration <= 5940000) // 99 min max
+            { // +1 min
                 CHOISED_CONFIG.duration = CHOISED_CONFIG.duration + 60000;
             }
         }
-        else if (MENU_CURSOR == 1)
+        else if (MENU_CURSOR == 1) // seconds
         {
-            if (CHOISED_CONFIG.duration <= 5998000)
+            if (CHOISED_CONFIG.duration <= 5998000) // 99 min 59 sec max
             {
                 CHOISED_CONFIG.duration = CHOISED_CONFIG.duration + 1000;
             }
@@ -135,15 +205,15 @@ void Logic::timeScreen(void)
         break;
 
     case DOWN_BUTTON:
-        if (MENU_CURSOR == 0)
+        if (MENU_CURSOR == 0) // minutes
         {
-            if (CHOISED_CONFIG.duration >= 60000)
+            if (CHOISED_CONFIG.duration >= 60000) // 1 min
             {
                 CHOISED_CONFIG.duration = CHOISED_CONFIG.duration - 60000;
             }
-        } else if (MENU_CURSOR == 1)
+        } else if (MENU_CURSOR == 1) // seconds
         {
-            if (CHOISED_CONFIG.duration >= 2000)
+            if (CHOISED_CONFIG.duration >= 2000) // 2 sec
             {
                 CHOISED_CONFIG.duration = CHOISED_CONFIG.duration - 1000;
             }
@@ -155,23 +225,33 @@ void Logic::timeScreen(void)
 
 void Logic::summaryScreen(void)
 {
-    display.showSummaryScreen(CHOISED_CONFIG, MENU_CURSOR);
+    // Show
+    if (!SCREEN_SAVER)
+    {
+        display.showSummaryScreen(CHOISED_CONFIG, MENU_CURSOR);
+    }
+    else
+    {
+        return;
+    }
+
+    // Button handling
     switch (Button::pressed())
     {
     case OK_BUTTON:
         switch (MENU_CURSOR)
         {
-        case 0:
+        case 0: // Play
             MENU_LEVEL++;
             REMAINING_TIME = CHOISED_CONFIG.duration;
             break;
 
-        case 1:
-            MENU_LEVEL = 1;
+        case 1: // Edit
+            MENU_LEVEL = POWER_SCREEN;
             break;
 
-        case 2:
-            MENU_LEVEL = 0;
+        case 2: // Exit
+            MENU_LEVEL = CHOISE_SCREEN;
             break;
         }
         MENU_CURSOR = 0;
@@ -195,13 +275,8 @@ void Logic::summaryScreen(void)
 
 void Logic::runningScreen(void)
 {
-    if (REMAINING_TIME < (CHOISED_CONFIG.duration - 500))
-    {
-        display.showRunningScreen(
-            REMAINING_TIME, MENU_CURSOR, PAUSE, HIGH_TEMP);
-    }
     // Start
-    if (!RUNNING || RESUMING)
+    if ((!RUNNING || RESUMING) && !HIGH_TEMP)
     {
         lamp.setBrightness(CHOISED_CONFIG.power);
         lamp.start();
@@ -212,30 +287,31 @@ void Logic::runningScreen(void)
     }
 
     // Timer
-    if (!PAUSE)
+    if (!PAUSE && !HIGH_TEMP)
     {
         uint32_t timedelta = millis() - LAST_TIME_POINT;
         if (REMAINING_TIME <= timedelta)
         {
             delay(REMAINING_TIME); lamp.stop();
-            Buzzer::end(); RUNNING = false;
+            SCREEN_SAVER_STOP = true;
             REMAINING_TIME = 0;
+            RUNNING = false;
             MENU_LEVEL++;
         }
         else
         {
-            REMAINING_TIME = REMAINING_TIME - timedelta;
-            LAST_TIME_POINT = LAST_TIME_POINT + timedelta;
+            REMAINING_TIME -= timedelta;
+            LAST_TIME_POINT += timedelta;
         }
     }
 
-    // Pause handling
+    // Button handling
     switch (Button::pressed())
     {
     case OK_BUTTON:
         if (MENU_CURSOR == 0)
         {
-            if (PAUSE)
+            if (PAUSE && !HIGH_TEMP)
             {
                 PAUSE = false;
                 RESUMING = true;
@@ -250,6 +326,8 @@ void Logic::runningScreen(void)
         {
             MENU_LEVEL = SUMMARY_SCREEN;
             MENU_CURSOR = 0;
+            RUNNING = false;
+            PAUSE = false;
         }
         break;
     case 0:
@@ -273,26 +351,53 @@ void Logic::runningScreen(void)
     if (tempSensor.highTemp() && !HIGH_TEMP)
     {
         PAUSE = true; lamp.stop();
+        SCREEN_SAVER_STOP = true;
         HIGH_TEMP = true;
         Buzzer::alarm();
     }
-    else if (HIGH_TEMP)
+    else if (!tempSensor.highTemp() && HIGH_TEMP)
     {
         HIGH_TEMP = false;
         RESUMING = true;
+    }
+
+    // Show
+    if (!SCREEN_SAVER)
+    {
+        display.showRunningScreen(
+            REMAINING_TIME, MENU_CURSOR, PAUSE, HIGH_TEMP);
     }
 }
 
 
 void Logic::doneScreen(void)
 {
-    display.showDoneScreen();
-    if (Button::pressed() == OK_BUTTON)
+    // Show
+    if (!SCREEN_SAVER)
     {
-        MENU_LEVEL = 3;
+        display.showDoneScreen();
+    }
+
+    // Button handling
+    if ((Button::pressed() == OK_BUTTON) && !SCREEN_SAVER)
+    {
+        MENU_LEVEL = SUMMARY_SCREEN;
+        END_ALARM_COUNTER = 0;
+    }
+
+    // End alarm
+    if ((END_ALARM_COUNTER < 3) && ((END_ALARM_COUNTER == 0)
+        || ((millis() - LAST_END_ALARM_TIME_POINT) > 30000)))
+    {
+        LAST_END_ALARM_TIME_POINT = millis();
+        END_ALARM_COUNTER++;
+        Buzzer::end();
     }
 }
 
+//--------------------------------------------------------------------
+// Other logic
+//--------------------------------------------------------------------
 
 void Logic::fanControl(void)
 {
@@ -303,5 +408,21 @@ void Logic::fanControl(void)
     if (!tempSensor.needFan() && fan.status())
     {
         fan.stop();
+    }
+}
+
+
+void Logic::screenSaver(void)
+{
+    if (SCREEN_SAVER_STOP)
+    {
+        SCREEN_SAVER = false;
+        SCREEN_SAVER_STOP = false;
+        LAST_IDLE_TIME_POINT = millis();
+    }
+    else if ((millis() - LAST_IDLE_TIME_POINT) > SCREEN_SAVER_TIMEOUT)
+    {
+        SCREEN_SAVER = true;
+        display.clearScreen();
     }
 }

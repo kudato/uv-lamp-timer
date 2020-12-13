@@ -1,4 +1,6 @@
+#include "uv-lamp-timer.h"
 #include "src/logic.h"
+
 
 void setup()
 {
@@ -8,6 +10,7 @@ void setup()
 void loop()
 {
     Logic::fanControl();
+    Logic::screenSaver();
     switch (MENU_LEVEL)
     {
     case CHOISE_SCREEN:
