@@ -1,0 +1,5 @@
+.DS_Store
+
+/calibration-pattern/*
+!/calibration-pattern/*.pdf
+!/calibration-pattern/*.kicad_pcb
